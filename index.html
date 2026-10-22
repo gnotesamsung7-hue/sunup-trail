@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F3C9A8">
+<title>Sunup Trail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700&family=Young+Serif&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4EEF4; --surface:#FFFFFF; --surface2:#FBF6F8; --ink:#2A2440; --muted:#675F7E; --line:#E3D8E2;
+  --amber:#E99A16; --amber-soft:#FDEBC6; --on-amber:#2A1A00; --teal:#3E8FA8; --rose:#D2557E;
+  --sky1:#FBD3B0; --sky2:#F6B6C4; --sky3:#B9C9EE;
+  --radar:#151935; --radar-line:#2E3668; --glow:#FFD36B;
+  --serif:"Young Serif", Georgia, "Times New Roman", serif;
+  --sans:"Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1A1A2E; --surface:#25243F; --surface2:#2D2B4A; --ink:#F4EFF6; --muted:#B4ADC8; --line:#3A3858;
+    --amber:#F6B23E; --amber-soft:#3D3021; --on-amber:#2A1A00; --teal:#7CC3DA; --rose:#F48BAB;
+    --sky1:#6B4A5E; --sky2:#4C3E63; --sky3:#2C3358;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1A1A2E; --surface:#25243F; --surface2:#2D2B4A; --ink:#F4EFF6; --muted:#B4ADC8; --line:#3A3858;
+  --amber:#F6B23E; --amber-soft:#3D3021; --on-amber:#2A1A00; --teal:#7CC3DA; --rose:#F48BAB;
+  --sky1:#6B4A5E; --sky2:#4C3E63; --sky3:#2C3358;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--sans);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.wrap{max-width:520px;margin:0 auto;padding:20px 18px 40px}
+.screen{display:none}
+.screen.on{display:block}
+h1,h2,h3{font-family:var(--serif);font-weight:400;margin:0;line-height:1.15}
+.muted{color:var(--muted)}
+
+/* Home hero */
+.hero{position:relative;padding:34px 20px 22px;margin:0 -18px;background:linear-gradient(180deg,var(--sky3) 0%,var(--sky2) 55%,var(--sky1) 100%);border-radius:0 0 28px 28px}
+.hero h1{font-size:clamp(2.6rem,11vw,3.4rem);letter-spacing:-.01em}
+.hero p{margin:.5rem 0 0;max-width:30ch;color:var(--ink);opacity:.8}
+.morning{margin:16px 0 0;padding:12px 14px;border-radius:14px;background:var(--amber-soft);font-size:.93rem}
+.hero canvas{position:absolute;right:8px;top:10px;width:110px;height:110px;pointer-events:none}
+
+.stats{display:flex;gap:22px;margin:22px 0 6px;flex-wrap:wrap}
+.stat b{display:block;font:400 1.7rem/1 var(--serif)}
+.stat span{font-size:.85rem;color:var(--muted)}
+
+.lenpick{margin:26px 0 8px}
+.lenpick p{margin:0 0 8px;font-weight:500}
+.seg{display:flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:4px}
+.seg button{flex:1;border:0;background:transparent;padding:9px 6px;border-radius:999px;font-size:.92rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:700;box-shadow:0 1px 0 var(--line)}
+
+/* Trail of chapters */
+.trail{list-style:none;margin:26px 0 0;padding:0;position:relative}
+.trail::before{content:"";position:absolute;left:19px;top:22px;bottom:22px;border-left:2px dashed var(--line)}
+.trail li{position:relative;display:flex;gap:14px;align-items:flex-start;padding:10px 0}
+.node{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:400 1rem var(--serif);background:var(--surface2);border:2px solid var(--line);color:var(--muted);position:relative;z-index:1}
+li.done .node{background:var(--amber-soft);border-color:var(--amber);color:var(--ink)}
+li.now .node{background:var(--amber);border-color:var(--amber);color:var(--on-amber);box-shadow:0 0 0 6px color-mix(in srgb,var(--amber) 25%,transparent)}
+.trail h3{font-size:1.12rem}
+.trail p{margin:2px 0 0;font-size:.92rem;color:var(--muted)}
+li.locked h3,li.locked p{opacity:.55}
+
+.cta{display:block;width:100%;border:0;border-radius:16px;padding:16px 18px;background:var(--amber);color:var(--on-amber);font-weight:700;font-size:1.05rem;margin-top:22px}
+.cta[disabled]{opacity:.45;cursor:not-allowed}
+.ghost{display:inline-block;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.linkish{background:none;border:0;padding:6px 0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;font-size:.92rem}
+
+/* Quest screen */
+.qtop{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.back{border:1px solid var(--line);background:var(--surface);border-radius:12px;width:42px;height:42px;font-size:1.2rem;flex:none}
+.qtop h2{font-size:1.25rem}
+.qtop small{display:block;color:var(--muted);font-size:.85rem}
+.objective{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center}
+.objective canvas{width:52px;height:52px;flex:none}
+.objective b{display:block}
+.objective span{color:var(--muted);font-size:.92rem}
+.radarbox{position:relative;margin:16px auto 0;max-width:360px}
+#radar{display:block;width:100%;aspect-ratio:1;border-radius:50%}
+.readout{text-align:center;margin-top:14px}
+.readout .dist{font:400 3rem/1 var(--serif)}
+.readout .hint{margin-top:6px;color:var(--muted);min-height:1.5em}
+.gps{font-size:.82rem;color:var(--muted);text-align:center;margin-top:4px}
+.walkstats{display:flex;justify-content:center;gap:26px;margin-top:14px;font-size:.92rem}
+.walkstats b{font:400 1.2rem var(--serif);display:block;text-align:center}
+.arbtn{margin-top:18px}
+.arbtn.close{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 10px color-mix(in srgb,var(--amber) 22%,transparent)}}
+.practice{margin-top:16px;border:1px dashed var(--line);border-radius:16px;padding:12px 14px}
+.practice p{margin:0 0 8px;font-size:.9rem;color:var(--muted)}
+.notice{margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.notice b{display:block;margin-bottom:4px}
+.safety{font-size:.85rem;color:var(--muted);margin-top:18px;text-align:center}
+
+/* AR */
+#ar{position:fixed;inset:0;background:#0b0e20;z-index:30;display:none}
+#ar.on{display:block}
+#ar video,#ar canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#arbg{position:absolute;inset:0;background:linear-gradient(180deg,#7E93D1 0%,#E9A3B4 55%,#FFCF9A 100%)}
+.arbar{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;background:linear-gradient(#0b0e20cc,transparent);color:#fff}
+.arbar button{border:0;background:#ffffff26;color:#fff;border-radius:12px;padding:10px 14px;backdrop-filter:blur(6px)}
+.armsg{position:absolute;left:14px;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);text-align:center;color:#fff;font-weight:500;text-shadow:0 1px 6px #000a}
+.armsg small{display:block;font-weight:400;opacity:.8}
+
+/* Dialog */
+#dlg{position:fixed;inset:0;z-index:40;display:none;align-items:flex-end;justify-content:center;background:color-mix(in srgb,#0b0e20 55%,transparent);padding:16px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px)}
+#dlg.on{display:flex}
+.card{width:100%;max-width:520px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;display:grid;grid-template-columns:72px 1fr;gap:6px 14px;animation:rise .25s ease-out}
+@keyframes rise{from{transform:translateY(16px);opacity:0}}
+.card canvas{width:72px;height:72px;grid-row:span 2;background:linear-gradient(180deg,var(--sky3),var(--sky1));border-radius:18px}
+.card .who{font-family:var(--serif);font-size:1.05rem}
+.card .txt{font-size:1.05rem;line-height:1.55}
+.card .cta{grid-column:1/-1;margin-top:10px}
+
+/* Journal */
+.jlist{list-style:none;padding:0;margin:18px 0 0}
+.jlist li{padding:12px 0;border-bottom:1px solid var(--line)}
+.jlist li span{color:var(--muted);font-size:.88rem}
+@media (prefers-reduced-motion: reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<section id="home" class="screen on">
+  <div class="wrap">
+    <div class="hero">
+      <canvas id="heroSprite" width="220" height="220" aria-hidden="true"></canvas>
+      <h1>Sunup Trail</h1>
+      <p>The sun overslept and the morning is stuck at grey. Walk out and help it rise, one street at a time.</p>
+    </div>
+    <div class="morning" id="morning"></div>
+    <div class="stats" id="stats"></div>
+
+    <div class="lenpick">
+      <p>How far do you want to walk?</p>
+      <div class="seg" id="seg" role="group" aria-label="Walk length">
+        <button data-len="short">Short<br><small>about 10 min</small></button>
+        <button data-len="medium">Medium<br><small>about 20 min</small></button>
+        <button data-len="long">Long<br><small>30 min+</small></button>
+      </div>
+    </div>
+
+    <ol class="trail" id="trail"></ol>
+    <button class="cta" id="go">Start walking</button>
+    <div class="row">
+      <button class="linkish" id="openJournal">Journal and totals</button>
+      <button class="linkish" id="practiceBtn">Try it without GPS</button>
+    </div>
+  </div>
+</section>
+
+<!-- QUEST -->
+<section id="quest" class="screen">
+  <div class="wrap">
+    <div class="qtop">
+      <button class="back" id="qBack" aria-label="Back to the trail">‹</button>
+      <div><h2 id="qTitle"></h2><small id="qSub"></small></div>
+    </div>
+    <div class="objective">
+      <canvas id="objSprite" width="104" height="104" aria-hidden="true"></canvas>
+      <div><b id="objText"></b><span id="objSub"></span></div>
+    </div>
+    <div class="radarbox"><canvas id="radar" aria-label="Radar showing where the target is"></canvas></div>
+    <div class="readout">
+      <div class="dist" id="dist">…</div>
+      <div class="hint" id="hint">Finding your location</div>
+      <div class="gps" id="gps"></div>
+    </div>
+    <div class="walkstats">
+      <div><b id="wsDist">0 m</b>walked</div>
+      <div><b id="wsTime">0:00</b>time</div>
+      <div><b id="wsSteps">0</b>steps, approx.</div>
+    </div>
+    <button class="cta arbtn" id="arBtn">Look with camera</button>
+    <div class="practice" id="practice" hidden>
+      <p>Practice mode. Distance here isn’t added to your totals.</p>
+      <div class="row" style="margin-top:0">
+        <button class="ghost" id="simToward">Walk 15 m toward it</button>
+        <button class="ghost" id="simWander">Wander 15 m</button>
+      </div>
+    </div>
+    <div class="notice" id="gpsErr" hidden></div>
+    <div class="row">
+      <button class="ghost" id="reroll">Move it somewhere else</button>
+      <button class="ghost" id="quit">Stop this walk</button>
+    </div>
+    <p class="safety">Look up while you walk. If the target lands on private property or across a busy road, move it somewhere else.</p>
+  </div>
+</section>
+
+<!-- JOURNAL -->
+<section id="journal" class="screen">
+  <div class="wrap">
+    <div class="qtop">
+      <button class="back" id="jBack" aria-label="Back to the trail">‹</button>
+      <div><h2>Journal</h2><small>Everything you’ve walked for</small></div>
+    </div>
+    <div class="stats" id="jstats"></div>
+    <ul class="jlist" id="jlist"></ul>
+    <div class="row" style="margin-top:28px"><button class="linkish" id="reset">Start the story over</button></div>
+  </div>
+</section>
+
+<!-- AR -->
+<div id="ar" aria-modal="true" role="dialog" aria-label="Camera view">
+  <div id="arbg"></div>
+  <video id="cam" playsinline muted autoplay></video>
+  <canvas id="arc"></canvas>
+  <div class="arbar"><span id="arDist"></span><button id="arClose">Close camera</button></div>
+  <div class="armsg" id="arMsg"></div>
+</div>
+
+<!-- DIALOG -->
+<div id="dlg" role="dialog" aria-modal="true" aria-live="polite">
+  <div class="card">
+    <canvas id="dlgSprite" width="144" height="144" aria-hidden="true"></canvas>
+    <div class="who" id="dlgWho"></div>
+    <div class="txt" id="dlgTxt"></div>
+    <button class="cta" id="dlgNext">Next</button>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const LS = 'sunup-trail-v1';
+const RANGES = { short:[90,170], medium:[180,330], long:[350,600] };
+const REACH = 25;
+
+/* ---------- Story ---------- */
+const O = t => ({ who:'Mira', sprite:'mira', text:t });
+const CHAPTERS = [
+  { title:'The sun overslept', blurb:'Find the first ray of morning.', kind:'find',
+    intro:[O('Good morning! Well, it should be. The sun overslept, and the whole sky is stuck at grey.'),
+           O('Its first ray slipped loose sometime in the night. Find it, and we can wake the sun gently.'),
+           O('Follow the radar. When you’re close, look through your camera and turn until you see it shine. Tap it to catch it.')],
+    targets:[{ name:'the first ray', sprite:'ray', found:[O('There it is, warm as toast. Hold on to it. That’s the morning starting.')] }],
+    outro:[O('One ray won’t wake the sun, but it’s a start. Same time tomorrow? Kiko the sparrow needs us.')] },
+
+  { title:'Kiko lost her song', blurb:'Rescue the sparrow who sings the town awake.', kind:'rescue',
+    intro:[O('Every morning Kiko sings first, and everyone else wakes up to her. Today, nothing. Not one note.'),
+           O('She’ll be somewhere up in the trees, too cold to sing. Get close and warm her with the ray.')],
+    targets:[{ name:'Kiko', sprite:'bird', hue:30, found:[{who:'Kiko',sprite:'bird',hue:30,text:'Cheep… cheep! Oh, my voice is back. I thought it was gone for good.'},
+                                                         O('Hear that? Somewhere, an alarm clock just got nervous.')] }],
+    outro:[O('Kiko says the dew pearls rolled away in the night. Without them, the flowers won’t open.')] },
+
+  { title:'Dew pearls', blurb:'Collect three drops of morning dew.', kind:'find',
+    intro:[O('Three dew pearls roll out every dawn to wake the flowers. Last night they rolled too far.'),
+           O('Gather all three before they dry up in the light.')],
+    targets:[{ name:'the first dew pearl', sprite:'dew', found:[O('Cool and shiny. The daisies by the gate just stretched.')] },
+             { name:'the second dew pearl', sprite:'dew', found:[O('Two! I can smell the jasmine waking up.')] },
+             { name:'the last dew pearl', sprite:'dew', found:[O('That’s all three. Listen… the whole garden is yawning.')] }],
+    outro:[O('Flowers open, birds singing. But the bakery is still dark. Where is Bruno?')] },
+
+  { title:'The sleepwalking baker', blurb:'Rescue Bruno before the bread goes cold.', kind:'rescue',
+    intro:[O('Bruno bakes the first bread every morning. When the sun didn’t rise, he kept sleeping and wandered off in his apron.'),
+           O('Walk gently when you reach him. Nobody likes being woken too fast.')],
+    targets:[{ name:'Bruno', sprite:'baker', found:[{who:'Bruno',sprite:'baker',text:'Hm? Where am I? Why am I holding a rolling pin in the street?'},
+                                                  {who:'Bruno',sprite:'baker',text:'The sun’s still down? Then the rooster’s bell must be missing. I saw it by the old well.'}] }],
+    outro:[O('Bruno’s ovens are warm again. One thing left: ring the bell and raise the sun.')] },
+
+  { title:'Raise the sun', blurb:'Ring the rooster’s bell, then climb to sunrise hill.', kind:'find',
+    intro:[O('The rooster’s bell calls the sun up every day. Somebody knocked it off its post.'),
+           O('Find the bell, then carry it up to sunrise hill and ring it as loud as you can.')],
+    targets:[{ name:'the rooster’s bell', sprite:'bell', found:[O('Still in one piece. Give it a little shake… Lovely. Now, up the hill.')] },
+             { name:'sunrise hill', sprite:'sun', found:[O('Ring it! Ring it now!')] }],
+    outro:[O('Look at that. The sun is up, and you walked it there yourself.'),
+           O('Mornings go missing all the time around here. Come walk with me on a morning errand whenever you’re up early.')] }
+];
+
+const CRITTERS = [
+  {name:'Tala',kind:'sparrow',sprite:'bird',hue:30},{name:'Biko',kind:'finch',sprite:'bird',hue:50},
+  {name:'Lumi',kind:'bluebird',sprite:'bird',hue:210},{name:'Mochi',kind:'morning kitten',sprite:'kit',hue:30},
+  {name:'Ube',kind:'morning kitten',sprite:'kit',hue:275},{name:'Pira',kind:'butterfly',sprite:'moth',hue:330}
+];
+const ITEMS = [
+  {name:'the rooster’s spare bell',sprite:'bell'},{name:'a runaway dew pearl',sprite:'dew'},
+  {name:'the morning star, before it fades',sprite:'star'},{name:'a stray sunbeam',sprite:'ray'}
+];
+const THANKS = ['You came out this early just for me?','I stayed in the shade waiting. It got so chilly.','Can we walk home slowly and watch the sky?','I knew someone would be up early.'];
+
+function makeWander(){
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  if (Math.random() < 0.6){
+    const c = pick(CRITTERS);
+    return { title:'Morning errand', blurb:'', kind:'rescue', wander:true,
+      intro:[O(`${c.name} the ${c.kind} wandered off before breakfast. Can you bring them home?`)],
+      targets:[{ name:c.name, sprite:c.sprite, hue:c.hue, found:[{who:c.name,sprite:c.sprite,hue:c.hue,text:pick(THANKS)}] }],
+      outro:[O(`${c.name} is home and fed. Thanks for the morning walk.`)] };
+  }
+  const it = pick(ITEMS);
+  return { title:'Morning errand', blurb:'', kind:'find', wander:true,
+    intro:[O(`Someone needs ${it.name} back before the day gets busy. Let’s go get it.`)],
+    targets:[{ name:it.name, sprite:it.sprite, found:[O('Got it. That’s one morning running on time.')] }],
+    outro:[O('Another good start to the day.')] };
+}
+
+/* Early-bird window: 4:00 to 9:59 local time */
+const isMorning = (d=new Date()) => d.getHours() >= 4 && d.getHours() < 10;
+
+/* ---------- State ---------- */
+const fresh = () => ({ chapter:0, len:'medium', stats:{m:0, secs:0, walks:0, embers:0, streak:0, lastDay:null, mornings:0}, journal:[], quest:null });
+let S = (() => { try { const r = localStorage.getItem(LS); if (r) return Object.assign(fresh(), JSON.parse(r)); } catch(e){} return fresh(); })();
+const save = () => { try { localStorage.setItem(LS, JSON.stringify(S)); } catch(e){} };
+
+let pos = null, lastFix = null, heading = null, watchId = null, wakeLock = null;
+let distHist = [], nearNotified = false, rafRadar = 0;
+
+/* ---------- Geo math ---------- */
+const R = 6371000, rad = d => d*Math.PI/180, deg = r => r*180/Math.PI;
+function gdist(a,b){ const dLa=rad(b.lat-a.lat), dLo=rad(b.lon-a.lon);
+  const h=Math.sin(dLa/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+function gbear(a,b){ const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat));
+  const x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon)); return (deg(Math.atan2(y,x))+360)%360; }
+function gdest(a,brg,d){ const d2=d/R, b=rad(brg), la=rad(a.lat), lo=rad(a.lon);
+  const la2=Math.asin(Math.sin(la)*Math.cos(d2)+Math.cos(la)*Math.sin(d2)*Math.cos(b));
+  const lo2=lo+Math.atan2(Math.sin(b)*Math.sin(d2)*Math.cos(la),Math.cos(d2)-Math.sin(la)*Math.sin(la2)); return {lat:deg(la2),lon:deg(lo2)}; }
+const norm180 = a => ((a+540)%360)-180;
+const fmtD = m => m < 1000 ? `${Math.round(m)} m` : `${(m/1000).toFixed(m<10000?2:1)} km`;
+const fmtT = s => { s=Math.round(s); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return h?`${h}:${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`:`${m}:${String(x).padStart(2,'0')}`; };
+const steps = m => Math.round(m*1.31);
+const compass = b => ['north','northeast','east','southeast','south','southwest','west','northwest'][Math.round(b/45)%8];
+
+/* ---------- Sprites ---------- */
+function sprite(ctx,type,s,t,hue){
+  ctx.save();
+  const g = ctx.createRadialGradient(0,0,0,0,0,s*1.3);
+  g.addColorStop(0,'rgba(255,214,140,.5)'); g.addColorStop(1,'rgba(255,214,140,0)');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,s*1.3,0,7); ctx.fill();
+  const circ=(x,y,r,c)=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();};
+  const flame=(x,y,r)=>{ const f=1+Math.sin(t*9)*.1; const gg=ctx.createRadialGradient(x,y,0,x,y,r*f);
+    gg.addColorStop(0,'#fffbe6');gg.addColorStop(.45,'#ffd36b');gg.addColorStop(1,'rgba(242,140,40,0)'); ctx.fillStyle=gg; ctx.beginPath();ctx.arc(x,y,r*f,0,7);ctx.fill(); };
+  switch(type){
+    case 'spark': flame(0,0,s*.6); circ(0,0,s*.14,'#fff'); break;
+    case 'kit': {
+      const h = hue ?? 265, c=`hsl(${h} 45% 80%)`, d=`hsl(${h} 30% 28%)`;
+      ctx.strokeStyle=c; ctx.lineWidth=s*.13; ctx.lineCap='round';
+      const tx=s*.68, ty=-s*.32+Math.sin(t*3)*s*.08;
+      ctx.beginPath(); ctx.moveTo(s*.28,s*.28); ctx.quadraticCurveTo(s*.85,s*.15,tx,ty); ctx.stroke();
+      flame(tx,ty,s*.22);
+      ctx.fillStyle=c; ctx.beginPath(); ctx.ellipse(0,s*.22,s*.42,s*.32,0,0,7); ctx.fill();
+      circ(0,-s*.14,s*.32,c);
+      ctx.beginPath(); ctx.moveTo(-s*.3,-s*.25); ctx.lineTo(-s*.22,-s*.56); ctx.lineTo(-s*.05,-s*.4); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(s*.3,-s*.25); ctx.lineTo(s*.22,-s*.56); ctx.lineTo(s*.05,-s*.4); ctx.fill();
+      if ((t%4) < .14){ ctx.strokeStyle=d; ctx.lineWidth=s*.04; ctx.beginPath(); ctx.moveTo(-s*.17,-s*.13);ctx.lineTo(-s*.07,-s*.13);ctx.moveTo(s*.07,-s*.13);ctx.lineTo(s*.17,-s*.13);ctx.stroke(); }
+      else { circ(-s*.12,-s*.13,s*.06,d); circ(s*.12,-s*.13,s*.06,d); circ(-s*.1,-s*.15,s*.02,'#fff'); circ(s*.14,-s*.15,s*.02,'#fff'); }
+      circ(0,-s*.03,s*.03,`hsl(${h} 50% 55%)`);
+      break; }
+    case 'moth': {
+      const h = hue ?? 40, f=.65+.35*Math.abs(Math.sin(t*6));
+      ctx.fillStyle=`hsl(${h} 70% 75%)`;
+      ctx.save(); ctx.scale(f,1);
+      ctx.beginPath(); ctx.ellipse(-s*.35,-s*.12,s*.35,s*.25,-.5,0,7); ctx.ellipse(s*.35,-s*.12,s*.35,s*.25,.5,0,7); ctx.fill();
+      ctx.fillStyle=`hsl(${h} 60% 62%)`;
+      ctx.beginPath(); ctx.ellipse(-s*.25,s*.2,s*.22,s*.16,.4,0,7); ctx.ellipse(s*.25,s*.2,s*.22,s*.16,-.4,0,7); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle='#3a2f4a'; ctx.beginPath(); ctx.ellipse(0,0,s*.09,s*.32,0,0,7); ctx.fill();
+      ctx.strokeStyle='#3a2f4a'; ctx.lineWidth=s*.03; ctx.beginPath(); ctx.moveTo(-s*.03,-s*.3); ctx.lineTo(-s*.15,-s*.5); ctx.moveTo(s*.03,-s*.3); ctx.lineTo(s*.15,-s*.5); ctx.stroke();
+      circ(-s*.04,-s*.22,s*.03,'#fff'); circ(s*.04,-s*.22,s*.03,'#fff');
+      break; }
+    case 'map': {
+      ctx.rotate(Math.sin(t*2)*.08);
+      ctx.fillStyle='#EBDDB7'; ctx.fillRect(-s*.5,-s*.36,s,s*.72);
+      ctx.fillStyle='#CDB988'; ctx.fillRect(-s*.56,-s*.4,s*.12,s*.8); ctx.fillRect(s*.44,-s*.4,s*.12,s*.8);
+      ctx.strokeStyle='#8a7550'; ctx.lineWidth=s*.035; ctx.setLineDash([s*.07,s*.05]);
+      ctx.beginPath(); ctx.moveTo(-s*.38,s*.2); ctx.quadraticCurveTo(-s*.05,-s*.3,s*.2,s*.05); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle='#c23f3f'; ctx.lineWidth=s*.06; ctx.beginPath(); ctx.moveTo(s*.14,-s*.01); ctx.lineTo(s*.3,s*.15); ctx.moveTo(s*.3,-s*.01); ctx.lineTo(s*.14,s*.15); ctx.stroke();
+      break; }
+    case 'bram': {
+      ctx.fillStyle='#4A5D8A'; ctx.beginPath(); ctx.moveTo(-s*.42,s*.62); ctx.lineTo(-s*.26,-s*.02); ctx.lineTo(s*.26,-s*.02); ctx.lineTo(s*.42,s*.62); ctx.fill();
+      circ(0,-s*.22,s*.24,'#E5C29C');
+      ctx.fillStyle='#F2F0EA'; ctx.beginPath(); ctx.moveTo(-s*.2,-s*.14); ctx.quadraticCurveTo(0,s*.32,s*.2,-s*.14); ctx.fill();
+      circ(-s*.08,-s*.25,s*.03,'#2a2a2a'); circ(s*.08,-s*.25,s*.03,'#2a2a2a');
+      ctx.fillStyle='#3B2F2A'; ctx.beginPath(); ctx.ellipse(0,-s*.4,s*.42,s*.08,0,0,7); ctx.fill();
+      ctx.fillRect(-s*.2,-s*.66,s*.4,s*.26);
+      ctx.strokeStyle='#3b3550'; ctx.lineWidth=s*.04; ctx.beginPath(); ctx.moveTo(s*.42,s*.1); ctx.lineTo(s*.42,s*.24); ctx.stroke();
+      flame(s*.42,s*.32,s*.15);
+      break; }
+    case 'odessa': {
+      ctx.fillStyle='#2B6B60'; ctx.beginPath(); ctx.moveTo(-s*.45,s*.62); ctx.quadraticCurveTo(-s*.5,-s*.62,0,-s*.58); ctx.quadraticCurveTo(s*.5,-s*.62,s*.45,s*.62); ctx.fill();
+      circ(0,-s*.12,s*.24,'#C9946A');
+      ctx.fillStyle='#1E1A2E'; ctx.beginPath(); ctx.ellipse(0,-s*.3,s*.26,s*.1,0,0,7); ctx.fill();
+      circ(-s*.08,-s*.12,s*.03,'#1e1a2e'); circ(s*.08,-s*.12,s*.03,'#1e1a2e');
+      ctx.strokeStyle='#1e1a2e'; ctx.lineWidth=s*.025; ctx.beginPath(); ctx.arc(0,-s*.04,s*.07,.3,2.8); ctx.stroke();
+      flame(-s*.38,s*.28,s*.18);
+      break; }
+    case 'wick': {
+      ctx.fillStyle='#F4EEDC'; ctx.fillRect(-s*.14,-s*.1,s*.28,s*.6);
+      ctx.fillStyle='#d9cfb3'; ctx.fillRect(s*.06,-s*.1,s*.08,s*.6);
+      ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=s*.03; ctx.beginPath(); ctx.moveTo(0,-s*.1); ctx.lineTo(0,-s*.2); ctx.stroke();
+      flame(0,-s*.34,s*.2);
+      break; }
+    case 'lantern': {
+      ctx.fillStyle='#3B3550'; ctx.fillRect(-s*.36,-s*.48,s*.72,s*.1); ctx.fillRect(-s*.4,s*.44,s*.8,s*.12);
+      ctx.strokeStyle='#3B3550'; ctx.lineWidth=s*.06; ctx.beginPath(); ctx.arc(0,-s*.56,s*.14,Math.PI,0); ctx.stroke();
+      const gg=ctx.createLinearGradient(0,-s*.4,0,s*.44); gg.addColorStop(0,'#fff3c4'); gg.addColorStop(1,'#f2a93b');
+      ctx.fillStyle=gg; ctx.fillRect(-s*.3,-s*.38,s*.6,s*.82);
+      ctx.strokeStyle='#3B3550'; ctx.lineWidth=s*.05; ctx.strokeRect(-s*.3,-s*.38,s*.6,s*.82);
+      ctx.beginPath(); ctx.moveTo(0,-s*.38); ctx.lineTo(0,s*.44); ctx.stroke();
+      flame(0,s*.04,s*.26);
+      break; }
+    case 'ray': {
+      ctx.rotate(t*.4);
+      ctx.strokeStyle='#FFC94A'; ctx.lineWidth=s*.07; ctx.lineCap='round';
+      for(let i=0;i<8;i++){ const a=i*Math.PI/4, l=s*(.5+(i%2)*.12+Math.sin(t*5+i)*.04); ctx.beginPath(); ctx.moveTo(Math.cos(a)*s*.3,Math.sin(a)*s*.3); ctx.lineTo(Math.cos(a)*l,Math.sin(a)*l); ctx.stroke(); }
+      flame(0,0,s*.38); circ(0,0,s*.12,'#fff'); break; }
+    case 'sun': {
+      ctx.fillStyle='#F4A3B5'; ctx.beginPath(); ctx.ellipse(0,s*.45,s*.75,s*.22,0,0,7); ctx.fill();
+      ctx.save(); ctx.beginPath(); ctx.rect(-s,-s,s*2,s*1.38); ctx.clip();
+      ctx.strokeStyle='#FFC94A'; ctx.lineWidth=s*.06; ctx.lineCap='round';
+      for(let i=0;i<9;i++){ const a=Math.PI+i*Math.PI/8, l=s*(.68+Math.sin(t*3+i)*.05); ctx.beginPath(); ctx.moveTo(Math.cos(a)*s*.48,s*.3+Math.sin(a)*s*.48); ctx.lineTo(Math.cos(a)*l,s*.3+Math.sin(a)*l); ctx.stroke(); }
+      const sg=ctx.createRadialGradient(0,s*.3,0,0,s*.3,s*.42); sg.addColorStop(0,'#FFF1B8'); sg.addColorStop(1,'#FFB93A');
+      ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(0,s*.3,s*.4,0,7); ctx.fill(); ctx.restore();
+      ctx.fillStyle='#7CB58A'; ctx.beginPath(); ctx.ellipse(0,s*.48,s*.8,s*.16,0,Math.PI,0,true); ctx.fill(); break; }
+    case 'dew': {
+      const dg=ctx.createRadialGradient(-s*.1,-s*.05,0,0,s*.05,s*.4); dg.addColorStop(0,'#FFFFFF'); dg.addColorStop(.4,'#BFE6F5'); dg.addColorStop(1,'#5FAED0');
+      ctx.fillStyle=dg; ctx.beginPath(); ctx.moveTo(0,-s*.5); ctx.bezierCurveTo(s*.1,-s*.3,s*.38,-s*.05,s*.38,s*.15); ctx.arc(0,s*.15,s*.38,0,Math.PI); ctx.bezierCurveTo(-s*.38,-s*.05,-s*.1,-s*.3,0,-s*.5); ctx.fill();
+      circ(-s*.12,s*.02,s*.07,'rgba(255,255,255,.9)'); break; }
+    case 'bird': {
+      const h=hue??30, body=`hsl(${h} 55% 62%)`, belly=`hsl(${h} 60% 88%)`, wing=`hsl(${h} 45% 42%)`;
+      const hop=Math.abs(Math.sin(t*3))*s*.06; ctx.translate(0,-hop);
+      ctx.fillStyle=wing; ctx.beginPath(); ctx.moveTo(s*.3,s*.1); ctx.lineTo(s*.62,-s*.05); ctx.lineTo(s*.55,s*.22); ctx.fill();
+      ctx.fillStyle=body; ctx.beginPath(); ctx.ellipse(0,s*.08,s*.38,s*.32,0,0,7); ctx.fill();
+      ctx.fillStyle=belly; ctx.beginPath(); ctx.ellipse(-s*.08,s*.18,s*.22,s*.18,0,0,7); ctx.fill();
+      ctx.fillStyle=wing; ctx.save(); ctx.rotate(Math.sin(t*10)*.15); ctx.beginPath(); ctx.ellipse(s*.12,s*.08,s*.2,s*.13,.4,0,7); ctx.fill(); ctx.restore();
+      ctx.fillStyle='#F2A33A'; ctx.beginPath(); ctx.moveTo(-s*.36,-s*.02); ctx.lineTo(-s*.52,s*.03); ctx.lineTo(-s*.36,s*.08); ctx.fill();
+      if((t%3.5)<.12){ ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=s*.03; ctx.beginPath(); ctx.moveTo(-s*.25,-s*.06); ctx.lineTo(-s*.15,-s*.06); ctx.stroke(); }
+      else { circ(-s*.2,-s*.06,s*.05,'#2a2a2a'); circ(-s*.19,-s*.08,s*.018,'#fff'); }
+      ctx.strokeStyle='#8a5a2a'; ctx.lineWidth=s*.03; ctx.beginPath(); ctx.moveTo(-s*.06,s*.38); ctx.lineTo(-s*.08,s*.5); ctx.moveTo(s*.08,s*.38); ctx.lineTo(s*.06,s*.5); ctx.stroke();
+      break; }
+    case 'baker': {
+      ctx.fillStyle='#F3EFE7'; ctx.beginPath(); ctx.moveTo(-s*.42,s*.62); ctx.lineTo(-s*.26,-s*.02); ctx.lineTo(s*.26,-s*.02); ctx.lineTo(s*.42,s*.62); ctx.fill();
+      ctx.fillStyle='#E99A16'; ctx.fillRect(-s*.2,s*.1,s*.4,s*.5);
+      circ(0,-s*.2,s*.24,'#D9A47E');
+      ctx.strokeStyle='#3a2a20'; ctx.lineWidth=s*.04; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(-s*.13,-s*.22); ctx.lineTo(-s*.04,-s*.22); ctx.moveTo(s*.04,-s*.22); ctx.lineTo(s*.13,-s*.22); ctx.stroke();
+      ctx.fillStyle='#5a3a2a'; ctx.beginPath(); ctx.ellipse(0,-s*.08,s*.12,s*.04,0,0,Math.PI); ctx.fill();
+      ctx.fillStyle='#FFFFFF'; ctx.fillRect(-s*.2,-s*.48,s*.4,s*.12);
+      circ(-s*.14,-s*.54,s*.13,'#fff'); circ(0,-s*.6,s*.15,'#fff'); circ(s*.14,-s*.54,s*.13,'#fff');
+      ctx.fillStyle='#8a5a2a'; ctx.fillRect(s*.3,s*.05,s*.32,s*.08);
+      ctx.fillStyle='#4a6a9a'; ctx.font=`${s*.2}px Figtree, sans-serif`; ctx.textAlign='center'; ctx.fillText('z', s*.32, -s*.62+Math.sin(t*2)*s*.05);
+      break; }
+    case 'mira': {
+      ctx.fillStyle='#3E8FA8'; ctx.beginPath(); ctx.moveTo(-s*.42,s*.62); ctx.quadraticCurveTo(-s*.4,0,0,0); ctx.quadraticCurveTo(s*.4,0,s*.42,s*.62); ctx.fill();
+      circ(0,-s*.18,s*.24,'#C08A62');
+      ctx.fillStyle='#E8C26A'; ctx.beginPath(); ctx.ellipse(0,-s*.36,s*.46,s*.1,0,0,7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0,-s*.44,s*.22,s*.14,0,Math.PI,0); ctx.fill();
+      ctx.fillStyle='#D2557E'; ctx.fillRect(-s*.22,-s*.42,s*.44,s*.05);
+      circ(-s*.08,-s*.17,s*.03,'#2a2040'); circ(s*.08,-s*.17,s*.03,'#2a2040');
+      ctx.strokeStyle='#2a2040'; ctx.lineWidth=s*.025; ctx.beginPath(); ctx.arc(0,-s*.1,s*.07,.3,2.8); ctx.stroke();
+      circ(-s*.14,-s*.08,s*.04,'rgba(210,85,126,.35)'); circ(s*.14,-s*.08,s*.04,'rgba(210,85,126,.35)');
+      flame(-s*.4,s*.25,s*.16);
+      break; }
+    case 'bell': {
+      ctx.rotate(Math.sin(t*4)*.18);
+      ctx.fillStyle='#E0B84A'; ctx.beginPath(); ctx.moveTo(-s*.4,s*.3); ctx.quadraticCurveTo(-s*.32,-s*.5,0,-s*.5); ctx.quadraticCurveTo(s*.32,-s*.5,s*.4,s*.3); ctx.fill();
+      ctx.fillRect(-s*.46,s*.26,s*.92,s*.08); circ(0,s*.42,s*.08,'#a07c22'); break; }
+    case 'star': {
+      ctx.rotate(t*.6); ctx.fillStyle='#FFE08A'; ctx.beginPath();
+      for(let i=0;i<10;i++){ const r=i%2?s*.2:s*.48, a=i*Math.PI/5-Math.PI/2; ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r); }
+      ctx.fill(); break; }
+  }
+  ctx.restore();
+}
+function paintStill(canvas,type,hue,bg){
+  const c=canvas.getContext('2d'), w=canvas.width;
+  let t0=performance.now();
+  const loop=()=>{ if(!canvas.isConnected) return; const t=(performance.now()-t0)/1000;
+    c.clearRect(0,0,w,w); if(bg){c.fillStyle=bg;c.fillRect(0,0,w,w);}
+    c.save(); c.translate(w/2,w/2+Math.sin(t*2)*w*.02); sprite(c,canvas.dataset.type||type,w*.32,t,canvas.dataset.hue?+canvas.dataset.hue:hue); c.restore();
+    canvas._raf=requestAnimationFrame(loop); };
+  cancelAnimationFrame(canvas._raf); canvas.dataset.type=type; canvas.dataset.hue=hue??''; loop();
+}
+
+/* ---------- Home ---------- */
+function renderHome(){
+  const st=S.stats;
+  const hr=new Date().getHours();
+  $('#morning').textContent = isMorning()
+    ? (hr<6 ? 'You’re up before the sun. Walks finished before 10 am earn the early-bird bonus.' : 'Good morning. Walks finished before 10 am earn the early-bird bonus.')
+    : (hr<18 ? 'The early-bird bonus is back tomorrow from 4 to 10 am. You can still walk now.' : 'Set out your shoes tonight. The early-bird bonus runs from 4 to 10 am.');
+  $('#stats').innerHTML = `
+    <div class="stat"><b>${(st.m/1000).toFixed(1)}</b><span>km walked</span></div>
+    <div class="stat"><b>${st.streak}</b><span>morning streak</span></div>
+    <div class="stat"><b>${st.embers}</b><span>sun coins</span></div>`;
+  document.querySelectorAll('#seg button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.len===S.len));
+  const done = S.chapter >= CHAPTERS.length;
+  let html = CHAPTERS.map((c,i)=>{
+    const cls = i < S.chapter ? 'done' : i===S.chapter ? 'now' : 'locked';
+    return `<li class="${cls}"><div class="node">${i<S.chapter?'✓':i+1}</div><div><h3>${c.title}</h3><p>${c.blurb}</p></div></li>`; }).join('');
+  html += `<li class="${done?'now':'locked'}"><div class="node">∞</div><div><h3>Morning errands</h3><p>${done?'A new lost friend or thing every morning.':'Unlocks once the sun is up.'}</p></div></li>`;
+  $('#trail').innerHTML = html;
+  const q = S.quest;
+  $('#go').textContent = q ? 'Resume your walk' : done ? 'Go on a morning errand' : `Start chapter ${S.chapter+1}`;
+}
+
+/* ---------- Dialog ---------- */
+function say(lines, done){
+  let i=0; const dlg=$('#dlg');
+  const show=()=>{ const L=lines[i]; $('#dlgWho').textContent=L.who; $('#dlgTxt').textContent=L.text;
+    paintStill($('#dlgSprite'),L.sprite,L.hue,null);
+    $('#dlgNext').textContent = i===lines.length-1 ? 'Continue' : 'Next'; };
+  $('#dlgNext').onclick=()=>{ i++; if(i<lines.length) show(); else { dlg.classList.remove('on'); done&&done(); } };
+  dlg.classList.add('on'); show(); $('#dlgNext').focus();
+}
+
+/* ---------- Screens ---------- */
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id)); window.scrollTo(0,0);
+  cancelAnimationFrame(rafRadar); if(id==='quest') radarLoop(); if(id==='home') renderHome(); }
+
+/* ---------- Sensors ---------- */
+async function askOrientation(){
+  try { if (typeof DeviceOrientationEvent!=='undefined' && DeviceOrientationEvent.requestPermission) await DeviceOrientationEvent.requestPermission(); } catch(e){}
+  const h = e => {
+    let hd = null;
+    if (typeof e.webkitCompassHeading === 'number') hd = e.webkitCompassHeading;
+    else if (e.absolute && e.alpha!=null) hd = 360 - e.alpha;
+    if (hd==null) return;
+    const so = (screen.orientation && screen.orientation.angle) || 0;
+    hd = (hd + so + 360) % 360;
+    heading = heading==null ? hd : (heading + norm180(hd-heading)*0.25 + 360)%360;
+  };
+  window.addEventListener('deviceorientationabsolute', h, true);
+  window.addEventListener('deviceorientation', h, true);
+}
+async function keepAwake(){ try{ if('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); }catch(e){} }
+
+function startGPS(){
+  $('#gpsErr').hidden = true;
+  if (!('geolocation' in navigator)) return gpsFail('This browser can’t share your location.');
+  stopGPS();
+  watchId = navigator.geolocation.watchPosition(onFix, err=>{
+    gpsFail(err.code===1 ? 'Location is turned off for this page. Allow location access in your browser, then try again, or practice without GPS.'
+                         : 'Couldn’t get a GPS fix. Step outside, away from tall buildings, and give it a minute.');
+  }, { enableHighAccuracy:true, maximumAge:2000, timeout:20000 });
+}
+function stopGPS(){ if(watchId!=null){ navigator.geolocation.clearWatch(watchId); watchId=null; } }
+function gpsFail(msg){
+  const n=$('#gpsErr'); n.hidden=false;
+  n.innerHTML = `<b>No location yet</b>${msg}<div class="row"><button class="ghost" id="retryGps">Try again</button><button class="ghost" id="goPractice">Practice without GPS</button></div>`;
+  $('#retryGps').onclick=startGPS; $('#goPractice').onclick=()=>{ S.quest.sim=true; save(); enterSim(); };
+  $('#hint').textContent='Waiting for location';
+}
+
+function onFix(p){
+  const q=S.quest; if(!q || q.sim) return;
+  $('#gpsErr').hidden = true;
+  const fix = { lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy, t:p.timestamp||Date.now() };
+  pos = fix;
+  if (heading==null && p.coords.heading!=null && !isNaN(p.coords.heading) && p.coords.speed>0.6) heading = p.coords.heading;
+  if (lastFix && fix.acc < 40){
+    const d=gdist(lastFix,fix), dt=(fix.t-lastFix.t)/1000;
+    if (d > 4 && dt > 0 && d/dt < 4.5){ addWalk(d, Math.min(dt,30), true); lastFix=fix; }
+    else if (d/Math.max(dt,1) >= 4.5) lastFix=fix;
+  } else if (!lastFix && fix.acc < 60) lastFix = fix;
+  $('#gps').textContent = `GPS accurate to about ${Math.round(fix.acc)} m`;
+  if (!q.target) spawnTarget();
+  tick();
+}
+function addWalk(d, dt, real){
+  const q=S.quest; q.m += d; q.secs += dt;
+  if (real){ S.stats.m += d; S.stats.secs += dt; }
+  save();
+}
+
+/* ---------- Quests ---------- */
+function chapterOf(q){ return q.def; }
+function beginQuest(sim){
+  const done = S.chapter >= CHAPTERS.length;
+  const def = done ? makeWander() : JSON.parse(JSON.stringify(CHAPTERS[S.chapter]));
+  S.quest = { def, idx:0, target:null, m:0, secs:0, sim:!!sim, started:Date.now() };
+  save();
+  say(def.intro, ()=>launch());
+}
+function launch(){
+  const q=S.quest; nearNotified=false; distHist=[]; lastFix=null;
+  $('#qTitle').textContent = q.def.title;
+  showScreen('quest'); askOrientation(); keepAwake();
+  if (q.sim) enterSim(); else { $('#practice').hidden=true; startGPS(); }
+  updateObjective(); tick();
+}
+function enterSim(){
+  stopGPS(); $('#gpsErr').hidden=true; $('#practice').hidden=false;
+  if (!pos) pos = { lat:10, lon:10, acc:5, t:Date.now() };
+  $('#gps').textContent='Practice mode';
+  if (!S.quest.target) spawnTarget();
+  tick();
+}
+function spawnTarget(){
+  const q=S.quest, tg=q.def.targets[q.idx]; if(!pos) return;
+  const [a,b]=RANGES[S.len]||RANGES.medium, k=q.def.targets.length>1?0.65:1;
+  const d=(a+Math.random()*(b-a))*k, brg=Math.random()*360;
+  const p=gdest(pos,brg,d);
+  q.target = { lat:p.lat, lon:p.lon, start:d };
+  nearNotified=false; distHist=[]; save(); updateObjective();
+}
+function updateObjective(){
+  const q=S.quest, tg=q.def.targets[q.idx];
+  const verb = q.def.kind==='rescue' ? 'Rescue' : (/hill/.test(tg.name) ? 'Climb to' : 'Find');
+  $('#objText').textContent = `${verb} ${tg.name}`;
+  $('#objSub').textContent = q.def.targets.length>1 ? `${q.idx+1} of ${q.def.targets.length}` : (q.def.kind==='rescue'?'Someone’s waiting for you':'It’s out there in the morning air');
+  $('#qSub').textContent = q.def.wander ? 'Morning errand' : `Chapter ${S.chapter+1} of ${CHAPTERS.length}`;
+  paintStill($('#objSprite'), tg.sprite, tg.hue, null);
+}
+function targetDist(){ const q=S.quest; return (pos && q && q.target) ? gdist(pos,q.target) : null; }
+function reach(){ return Math.max(REACH, Math.min(pos && pos.acc || 0, 40)); }
+
+function tick(){
+  const q=S.quest; if(!q) return;
+  $('#wsDist').textContent=fmtD(q.m); $('#wsTime').textContent=fmtT(q.secs); $('#wsSteps').textContent=steps(q.m).toLocaleString();
+  const d=targetDist(), btn=$('#arBtn');
+  if (d==null){ $('#dist').textContent='…'; return; }
+  $('#dist').textContent=fmtD(d);
+  const now=Date.now(); distHist.push({t:now,d}); distHist=distHist.filter(x=>now-x.t<20000);
+  const near = d <= reach();
+  btn.classList.toggle('close',near);
+  btn.textContent = near ? 'It’s close. Look with camera' : 'Look with camera';
+  if (near && !nearNotified){ nearNotified=true; try{navigator.vibrate&&navigator.vibrate([120,60,120]);}catch(e){} }
+  const b=gbear(pos,q.target); let hint;
+  if (near) hint='You’re right here. Lift your camera and turn slowly.';
+  else if (heading!=null){
+    const rel=norm180(b-heading);
+    hint = Math.abs(rel)<20 ? 'Straight ahead' : Math.abs(rel)>140 ? 'It’s behind you' : rel<0 ? 'Bear left' : 'Bear right';
+    hint += `, to the ${compass(b)}`;
+  } else hint = `Head ${compass(b)}`;
+  if (distHist.length>3 && !near){ const dd=distHist[0].d-d; if(dd>8) hint+='. Getting closer.'; else if(dd<-8) hint+='. Drifting away.'; }
+  $('#hint').textContent=hint;
+}
+
+function collect(){
+  const q=S.quest, tg=q.def.targets[q.idx];
+  S.stats.embers += 10; q.idx++; q.target=null; save();
+  closeAR();
+  say(tg.found, ()=>{
+    if (q.idx < q.def.targets.length){ spawnTarget(); tick(); }
+    else finishQuest();
+  });
+}
+function finishQuest(){
+  const q=S.quest;
+  stopGPS();
+  const today=new Date().toLocaleDateString('en-CA'), y=new Date(Date.now()-864e5).toLocaleDateString('en-CA');
+  const early = isMorning();
+  if (!q.sim){
+    if (early && S.stats.lastDay!==today){ S.stats.streak = S.stats.lastDay===y ? S.stats.streak+1 : 1; S.stats.lastDay=today; S.stats.mornings=(S.stats.mornings||0)+1; }
+    S.stats.walks++;
+  }
+  const bonus = early && !q.sim ? 15 : 0;
+  S.stats.embers += 25 + bonus;
+  S.journal.unshift({ date:today, title: q.def.wander ? `Morning errand: ${q.def.targets[0].name}` : q.def.title, m:q.m, secs:q.secs, sim:q.sim });
+  S.journal = S.journal.slice(0,60);
+  if (!q.def.wander) S.chapter++;
+  S.quest=null; save();
+  say(q.def.outro.concat([{who:'Walk complete',sprite:'ray',text:`${fmtD(q.m)} walked in ${fmtT(q.secs)}, about ${steps(q.m).toLocaleString()} steps. +${10*q.def.targets.length+25+bonus} sun coins${bonus?', including the early-bird bonus':''}.${q.sim?' (Practice, not counted.)':''}`}]),
+      ()=>showScreen('home'));
+}
+
+/* ---------- Radar ---------- */
+function radarLoop(){
+  const c=$('#radar'), ctx=c.getContext('2d'), dpr=Math.min(devicePixelRatio||1,2);
+  const draw=(ts)=>{
+    const w=c.clientWidth; if(c.width!==Math.round(w*dpr)){ c.width=c.height=Math.round(w*dpr); }
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const cx=w/2, r=w/2-6, t=ts/1000;
+    ctx.clearRect(0,0,w,w);
+    const bg=ctx.createRadialGradient(cx,cx,0,cx,cx,r); bg.addColorStop(0,'#5E78B8'); bg.addColorStop(1,'#33467E');
+    ctx.fillStyle=bg; ctx.beginPath(); ctx.arc(cx,cx,r,0,7); ctx.fill();
+    const q=S.quest, d=targetDist();
+    const range = d==null?100:[50,100,200,400,800,1600,3200].find(x=>x>=d*1.15)||d*1.2;
+    ctx.strokeStyle='rgba(255,255,255,.28)'; ctx.lineWidth=1; ctx.fillStyle='rgba(255,255,255,.75)'; ctx.font='11px Figtree, sans-serif'; ctx.textAlign='left';
+    for(let i=1;i<=3;i++){ ctx.beginPath(); ctx.arc(cx,cx,r*i/3,0,7); ctx.stroke(); ctx.fillText(fmtD(range*i/3), cx+4, cx-r*i/3+13); }
+    const up = heading ?? 0;
+    // sweep
+    const sw=(t*1.4)%(Math.PI*2);
+    const sg=ctx.createConicGradient ? ctx.createConicGradient(sw-Math.PI/2-.9,cx,cx) : null;
+    if (sg){ sg.addColorStop(0,'rgba(255,214,140,0)'); sg.addColorStop(.14,'rgba(255,214,140,.28)'); sg.addColorStop(.145,'rgba(255,214,140,0)');
+      ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(cx,cx,r,0,7); ctx.fill(); }
+    // north marker
+    const na=rad(-up); ctx.fillStyle='#F2B33D'; ctx.font='600 13px Figtree, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('N', cx+Math.sin(na)*(r-14), cx-Math.cos(na)*(r-14));
+    // target
+    if (d!=null){
+      const rel=rad(gbear(pos,q.target)-up), rr=Math.min(d/range,1)*r*.92;
+      const x=cx+Math.sin(rel)*rr, y=cx-Math.cos(rel)*rr, pulse=6+Math.sin(t*4)*2;
+      const gg=ctx.createRadialGradient(x,y,0,x,y,26); gg.addColorStop(0,'rgba(255,211,107,.9)'); gg.addColorStop(1,'rgba(255,211,107,0)');
+      ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(x,y,26,0,7); ctx.fill();
+      ctx.fillStyle='#fff6d6'; ctx.beginPath(); ctx.arc(x,y,pulse,0,7); ctx.fill();
+      // reach circle
+      ctx.strokeStyle='rgba(255,211,107,.35)'; ctx.setLineDash([4,4]); ctx.beginPath(); ctx.arc(x,y,Math.max(4,reach()/range*r),0,7); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // you
+    ctx.save(); ctx.translate(cx,cx); ctx.fillStyle='#FFFFFF';
+    if (heading!=null){ ctx.beginPath(); ctx.moveTo(0,-11); ctx.lineTo(8,8); ctx.lineTo(0,4); ctx.lineTo(-8,8); ctx.closePath(); ctx.fill(); }
+    else { ctx.beginPath(); ctx.arc(0,0,7,0,7); ctx.fill(); }
+    ctx.restore();
+    rafRadar=requestAnimationFrame(draw);
+  };
+  cancelAnimationFrame(rafRadar); rafRadar=requestAnimationFrame(draw);
+  clearInterval(radarLoop._iv); radarLoop._iv=setInterval(()=>{ if(S.quest) tick(); },1000);
+}
+
+/* ---------- AR ---------- */
+let arRaf=0, stream=null, arHit=null, burst=null;
+async function openAR(){
+  const ar=$('#ar'), v=$('#cam'); ar.classList.add('on'); burst=null;
+  $('#arMsg').innerHTML='<small>Starting camera…</small>';
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ideal:'environment'} }, audio:false });
+    v.srcObject=stream; v.hidden=false; await v.play().catch(()=>{});
+  }catch(e){ v.hidden=true; stream=null; }
+  arLoop();
+}
+function closeAR(){
+  $('#ar').classList.remove('on'); cancelAnimationFrame(arRaf);
+  if (stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  $('#cam').srcObject=null;
+}
+function arLoop(){
+  const c=$('#arc'), ctx=c.getContext('2d'), dpr=Math.min(devicePixelRatio||1,2), FOV=60;
+  const draw=(ts)=>{
+    const w=c.clientWidth, h=c.clientHeight;
+    if (c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); }
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+    const t=ts/1000, q=S.quest; if(!q){ return; }
+    const tg=q.def.targets[q.idx], d=targetDist();
+    $('#arDist').textContent = d==null?'':fmtD(d)+' away';
+    if (!tg){ return; }
+    const near = d!=null && d<=reach();
+    let x=w/2, offscreen=0;
+    if (heading!=null && d!=null){
+      const rel=norm180(gbear(pos,q.target)-heading);
+      if (Math.abs(rel) > FOV/2+8) offscreen = rel<0?-1:1;
+      x = w/2 + (rel/(FOV/2))*(w/2);
+    } else x = w/2 + Math.sin(t*.5)*w*.08;
+    const s = near ? Math.min(w,h)*.2 : Math.max(26, Math.min(w,h)*.2*(reach()/Math.max(d||1,reach()))*2.2);
+    const y = h*.5 + Math.sin(t*2)*s*.12;
+    arHit = null;
+    if (burst){
+      const k=(t-burst.t0);
+      burst.p.forEach(p=>{ const px=burst.x+p.vx*k*120, py=burst.y+p.vy*k*120+k*k*60, a=Math.max(0,1-k/1.1);
+        ctx.fillStyle=`rgba(255,${200+p.c},${100+p.c},${a})`; ctx.beginPath(); ctx.arc(px,py,3+p.c/20,0,7); ctx.fill(); });
+      if (k>1.1){ burst=null; collect(); return; }
+    } else if (!offscreen){
+      ctx.save(); ctx.globalAlpha = near?1:.55; ctx.translate(x,y); sprite(ctx,tg.sprite,s,t,tg.hue); ctx.restore();
+      if (near) arHit={x,y,r:s*1.1};
+    } else {
+      const ax = offscreen<0?34:w-34;
+      ctx.fillStyle='rgba(255,211,107,.9)'; ctx.beginPath();
+      ctx.moveTo(ax+offscreen*14,h/2); ctx.lineTo(ax-offscreen*10,h/2-18); ctx.lineTo(ax-offscreen*10,h/2+18); ctx.fill();
+    }
+    let msg;
+    if (burst) msg='';
+    else if (!near) msg=`Get within ${Math.round(reach())} m to reach ${tg.name}.<small>Keep walking. It shines brighter as you close in.</small>`;
+    else if (offscreen) msg=`Turn ${offscreen<0?'left':'right'}. ${tg.name[0].toUpperCase()+tg.name.slice(1)} is over there.`;
+    else msg=`Tap ${tg.name} to ${q.def.kind==='rescue'?'rescue them':'pick it up'}.`;
+    if (heading==null && near) msg += '<small>Your phone isn’t sharing its compass, so look around until it appears.</small>';
+    if (!stream && !burst) msg += '<small>Camera unavailable. Showing the scene without it.</small>';
+    const el=$('#arMsg'); if (el._m!==msg){ el.innerHTML=msg; el._m=msg; }
+    arRaf=requestAnimationFrame(draw);
+  };
+  cancelAnimationFrame(arRaf); arRaf=requestAnimationFrame(draw);
+}
+$('#arc').addEventListener('pointerdown', e=>{
+  if (!arHit || burst) return;
+  const r=$('#arc').getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+  if (Math.hypot(x-arHit.x,y-arHit.y) <= arHit.r){
+    try{navigator.vibrate&&navigator.vibrate(80);}catch(err){}
+    burst={x:arHit.x,y:arHit.y,t0:performance.now()/1000,p:Array.from({length:40},()=>{const a=Math.random()*7,v=.4+Math.random();return{vx:Math.cos(a)*v,vy:Math.sin(a)*v-.4,c:Math.random()*55};})};
+  }
+});
+
+/* ---------- Practice ---------- */
+function simMove(toward){
+  const q=S.quest; if(!q||!pos) return;
+  const brg = toward && q.target ? gbear(pos,q.target)+(Math.random()*30-15) : Math.random()*360;
+  const p=gdest(pos,brg,15); pos={lat:p.lat,lon:p.lon,acc:5,t:Date.now()};
+  heading=(brg+360)%360; addWalk(15,11,false); tick();
+}
+
+/* ---------- Wiring ---------- */
+document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{ S.len=b.dataset.len; save(); renderHome(); });
+$('#go').onclick=()=>{ if (S.quest) launch(); else beginQuest(false); };
+$('#practiceBtn').onclick=()=>{ if (S.quest){ S.quest.sim=true; save(); launch(); } else beginQuest(true); };
+$('#qBack').onclick=()=>{ stopGPS(); showScreen('home'); };
+$('#arBtn').onclick=openAR;
+$('#arClose').onclick=closeAR;
+$('#simToward').onclick=()=>simMove(true);
+$('#simWander').onclick=()=>simMove(false);
+$('#reroll').onclick=()=>{ if(pos){ spawnTarget(); tick(); } };
+$('#quit').onclick=()=>{ if(confirm('Stop this walk? Distance you’ve walked is still saved.')){ stopGPS(); S.quest=null; save(); showScreen('home'); } };
+$('#openJournal').onclick=()=>{
+  const st=S.stats;
+  $('#jstats').innerHTML=`
+    <div class="stat"><b>${(st.m/1000).toFixed(2)}</b><span>km in total</span></div>
+    <div class="stat"><b>${steps(st.m).toLocaleString()}</b><span>steps, approx.</span></div>
+    <div class="stat"><b>${Math.round(st.secs/60)}</b><span>active minutes</span></div>
+    <div class="stat"><b>${st.walks}</b><span>walks finished</span></div>`;
+  $('#jlist').innerHTML = S.journal.length ? S.journal.map(j=>`<li>${j.title}<br><span>${j.date}, ${fmtD(j.m)} in ${fmtT(j.secs)}${j.sim?', practice':''}</span></li>`).join('')
+    : '<li class="muted">Nothing yet. Your first walk will show up here.</li>';
+  showScreen('journal');
+};
+$('#jBack').onclick=()=>showScreen('home');
+$('#reset').onclick=()=>{ if(confirm('Start the story over? Your totals stay, your chapter progress resets.')){ S.chapter=0; S.quest=null; save(); showScreen('home'); } };
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && S.quest && !S.quest.sim && $('#quest').classList.contains('on')) keepAwake(); });
+
+paintStill($('#heroSprite'),'sun');
+renderHome();
+})();
+</script>
+</body>
+</html>
